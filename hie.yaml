@@ -1,0 +1,10 @@
+cradle:
+  stack:
+    - path: "./src"
+      component: "resonator:lib"
+
+    - path: "./app/Main.hs"
+      component: "resonator:exe:resonator-exe"
+
+    - path: "./test"
+      component: "resonator:test:resonator-test"

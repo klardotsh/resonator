@@ -176,7 +176,7 @@ enable-cue-files = true
 # additive. Thus, with all of "ignore-articles=true", "ignore-case=true",
 # "ignore-spaces=true", and "ignore-special-characters=true", for grouping and
 # sorting purposes, "The Big Bad Band & A Really Cool Friend!" would be parsed
-# as "bigbadbandareallycoolfriend". If "The Big Bad Band / A Really Cool Friend"
+# as "bigbadbandareallycoolfriend". If "A Big Bad Band / The Really Cool Friend"
 # exists, it would parse exactly the same ("bigbadbandareallycoolfriend") and be
 # considered the same group. Since the former was the longest name discovered,
 # it would be presented to clients, representing the entire group.
@@ -189,10 +189,12 @@ enable-cue-files = true
 # default: true
 enabled = true
 # If enabled, known articles are removed from the artist tag while grouping.
-# "The Dirty Heads" and "Dirty Heads" will be considered the same group. Applies
-# to artists and albums, though this almost always only matters for artists. The
-# word list does not attempt to be exhaustive of English, let alone other
-# languages; patches welcome!
+# "The Dirty Heads" and "Dirty Heads" will be considered the same group.
+# Articles do not have to be at the beginning of the string to be matched; "The
+# Beatles" and "Beatles The" are considered equivalent. Applies to artists and
+# albums, though this almost always only matters for artists. The word list
+# barely attempts to be exhaustive of English, let alone other languages;
+# patches welcome!
 #
 # The longest name as discovered will be presented (i.e. "The Dirty Heads" will
 # be seen as the artist header, in this example). Given a tie, assume

@@ -14,7 +14,16 @@ type Codec = Either LosslessCodec LossyCodec
 data LosslessCodec
     = Ape
     | Flac
-    | PcmS24le
+    | PcmS8le -- WAV - does this even exist?
+    | PcmS8be -- WAV - does this even exist?
+    | PcmS16le -- WAV
+    | PcmS16be -- WAV - does this even exist?
+    | PcmS24le -- WAV
+    | PcmS24be -- WAV - does this even exist?
+    | PcmS32le -- WAV
+    | PcmS32be -- WAV - does this even exist?
+    | PcmS48le -- WAV - does this even exist?
+    | PcmS48be -- WAV - does this even exist?
     deriving (Bounded, Enum, Eq, Read, Show)
 
 -- These values are pulled from `streams[].codec_name` in ffprobe's output, and

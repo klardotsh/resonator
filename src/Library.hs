@@ -5,11 +5,13 @@ module Library
     ( LibraryTrack(..)
     , LibraryTrackError
     , fileForLibrary
+    , groupableTag
     ) where
 
 import           BitrateUtils            ( Kbps (..) )
 import           CodecUtils              ( Codec, LosslessCodec (..),
                                            LossyCodec (..) )
+import           Config                  ( ConfigurationLibraryGrouping (..) )
 import           FFprobe                 ( FFprobeResult (..),
                                            FFprobeResultFormat (..),
                                            FFprobeResultStream (..),
@@ -19,8 +21,11 @@ import           TimeUtils               ( Milliseconds (..) )
 import           Data.ByteString.Lazy    ( ByteString )
 import           Data.List               ( nub )
 import           Data.Maybe              ( fromMaybe )
+import qualified Data.Set                as Set
+import           Data.String             ( IsString )
 import           Data.String.Conversions ( cs )
 import           Data.Text               ( Text )
+import qualified Data.Text               as T
 import           Data.Text.Format        ( Format, Only (..), format )
 import           Data.Text.Lazy          ( toStrict )
 import           System.Process.Typed    ( readProcess, shell )
@@ -131,3 +136,80 @@ fileForLibrary p = do
     case probed of
         Left e    -> return $ Left e
         Right res -> return $ probeResultToLibraryTrack res
+
+groupableTag :: ConfigurationLibraryGrouping -> Text -> Text
+groupableTag conf
+    | not (groupingEnabled conf) = id
+    | otherwise =
+        transformSpaces (ignoreSpaces conf) .
+        transformArticles (ignoreArticles conf) .
+        transformSpecialCharacters (ignoreSpecialCharacters conf) .
+        transformCase (ignoreCase conf)
+
+transformArticles :: Bool -> Text -> Text
+transformArticles False t = t
+transformArticles True t  = T.unwords $ filter notArticle $ T.words t
+
+-- entirely non-exhaustive and only handles English for now, because klardotsh
+-- is only (arguably) fluent in English and doesn't trust his fuzzy
+-- understanding of any other language enough to write grouping rules for it. as
+-- always, patches welcome.
+articles :: Set.Set Text
+articles = Set.fromList ["a", "an", "the"]
+
+-- drop article words: https://en.wikipedia.org/wiki/Article_(grammar)
+-- regardless of `ignoreCase`'s impact on grouping the rest of the string, this
+-- method drops articles case-insensitively
+notArticle :: Text -> Bool
+notArticle word = Set.notMember (T.toCaseFold word) articles
+
+transformCase :: Bool -> Text -> Text
+transformCase False t = t
+transformCase True t  = T.toCaseFold t
+
+transformSpaces :: Bool -> Text -> Text
+transformSpaces False t = t
+transformSpaces True t  = T.concat $ T.words t
+
+transformSpecialCharacters :: Bool -> Text -> Text
+transformSpecialCharacters False t = t
+transformSpecialCharacters _ t     = T.filter notSpecialCharacter t
+
+-- by no means exhaustive, or probably even quite correct, but for Latin script
+-- languages, this should be a good start. as always, patches welcome.
+--
+-- sorted with vim's `:'<,'>sort`
+specialCharacters :: Set.Set Char
+specialCharacters =
+    Set.fromList
+        [ '!'
+        , '"'
+        , '$'
+        , '%'
+        , '&'
+        , '('
+        , ')'
+        , '*'
+        , '+'
+        , ','
+        , '-'
+        , '.'
+        , '/'
+        , ':'
+        , ';'
+        , '<'
+        , '>'
+        , '@'
+        , '['
+        , '\''
+        , '\\'
+        , ']'
+        , '^'
+        , '_'
+        , '{'
+        , '|'
+        , '}'
+        ]
+
+notSpecialCharacter :: Char -> Bool
+notSpecialCharacter c = Set.notMember c specialCharacters

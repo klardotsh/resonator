@@ -8,6 +8,7 @@ module Config
     , ConfigurationAuth(..)
     , ConfigurationClients(..)
     , ConfigurationCollection(..)
+    , ConfigurationLibraryGrouping(..)
     ) where
 
 import           BitrateUtils     ( BitrateExceededBehavior (..), Kbps (..) )
