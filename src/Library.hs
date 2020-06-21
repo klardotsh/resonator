@@ -1,9 +1,11 @@
 -- This source code is part of the resonator project, licensed under the
--- AGPL-3.0 license found in the LICENSE.md file in the root directory of this
--- source tree, or at https://www.gnu.org/licenses/agpl-3.0.html
+-- AGPL-3.0-or-later license found in the LICENSE.md file in the root directory
+-- of this source tree, or at https://www.gnu.org/licenses/agpl-3.0.html
 module Library
     ( LibraryTrack(..)
-    , LibraryTrackError
+    , LibraryTrackError(..)
+    , LibraryTrackContainer(..)
+    , LibraryTrackErrorOrContainer(..)
     , fileForLibrary
     , groupableTag
     ) where
@@ -18,6 +20,7 @@ import           FFprobe                 ( FFprobeResult (..),
                                            FFprobeResultTags (..), probeFile )
 import           TimeUtils               ( Milliseconds (..) )
 
+import           Control.Applicative     ( (<|>) )
 import           Data.ByteString.Lazy    ( ByteString )
 import           Data.List               ( nub )
 import           Data.Maybe              ( fromMaybe )
@@ -28,9 +31,37 @@ import           Data.Text               ( Text )
 import qualified Data.Text               as T
 import           Data.Text.Format        ( Format, Only (..), format )
 import           Data.Text.Lazy          ( toStrict )
+import           Data.Time.Clock         ( UTCTime )
+import           System.Directory        ( getModificationTime )
 import           System.Process.Typed    ( readProcess, shell )
 import           Text.Casing             ( pascal )
 import           Text.Read               ( readMaybe )
+
+type LibraryTrackError = String
+
+type LibraryTrackErrorOrContainer
+     = Either LibraryTrackError LibraryTrackContainer
+
+data LibraryGroupingType
+    = AlbumArtist Text
+    -- ^ while this seems to be more or less the same as Artist, at the glass it
+    -- is sometimes desired to separate albums with multiple contributors into a
+    -- "Various Artists" section, so we'll separate out *all* tracks with a
+    -- populated AlbumArtist and let downstream consumers deal with it
+    | Artist Text
+    | Filename FilePath
+    -- ^ represents a "No Name" grouping where files are only identifiable by
+    -- their filename
+    deriving (Show)
+
+data LibraryTrackContainer
+    = LibraryTrackContainer
+          { filePath     :: FilePath
+          , mtime        :: UTCTime
+          , track        :: LibraryTrack
+          , groupingType :: LibraryGroupingType
+          }
+    deriving (Show)
 
 data LibraryTrack
     = LibraryTrack
@@ -52,8 +83,6 @@ data LibraryTrack
           }
     deriving (Show)
 
-type LibraryTrackError = String
-
 tagsOrError ::
        Maybe FFprobeResultTags -> Either LibraryTrackError FFprobeResultTags
 tagsOrError (Just fmt) = Right fmt
@@ -68,15 +97,8 @@ maybeLosslessCodec c = readMaybe c :: Maybe LosslessCodec
 maybeLossyCodec :: String -> Maybe LossyCodec
 maybeLossyCodec c = readMaybe c :: Maybe LossyCodec
 
--- someone who is actually good at Haskell: is there a cleaner way to do this
--- pattern?
 maybeEitherFromMaybes :: Maybe a -> Maybe b -> Maybe (Either a b)
-maybeEitherFromMaybes (Just it) Nothing = Just $ Left it
-maybeEitherFromMaybes Nothing (Just it) = Just $ Right it
-maybeEitherFromMaybes _ _               = Nothing
-
-unknownCodecErrorStr :: Format
-unknownCodecErrorStr = "unknown codec {}"
+maybeEitherFromMaybes l r = (l >>= (Just . Left)) <|> (r >>= (Just . Right))
 
 uniqueCodecOrError :: [Text] -> Either LibraryTrackError Codec
 uniqueCodecOrError codecs
@@ -86,7 +108,7 @@ uniqueCodecOrError codecs
     | (length . nub) codecs > 1 = uniqueCodecOrError [head codecs]
     | otherwise = do
         let codec = pascal . cs . head $ codecs
-        maybe (Left . cs . format unknownCodecErrorStr $ Only codec) Right $
+        maybe (Left . cs . format "unknown codec {}" $ Only codec) Right $
             maybeEitherFromMaybes
                 (maybeLosslessCodec codec)
                 (maybeLossyCodec codec)
@@ -130,12 +152,29 @@ probeResultToLibraryTrack probed = do
     ltDuration <- durationOrError $ ffprStreams probed
     return LibraryTrack {..}
 
-fileForLibrary :: FilePath -> IO (Either String LibraryTrack)
-fileForLibrary p = do
-    probed <- probeFile p
-    case probed of
-        Left e    -> return $ Left e
-        Right res -> return $ probeResultToLibraryTrack res
+trackFromFFprobe ::
+       FilePath
+    -> UTCTime
+    -> Either String FFprobeResult
+    -> LibraryTrackErrorOrContainer
+trackFromFFprobe fp mtime possibleRes = do
+    lt <- possibleRes >>= probeResultToLibraryTrack
+    Right $ LibraryTrackContainer fp mtime lt $ calculateGroupingType fp lt
+
+fileForLibrary :: FilePath -> IO LibraryTrackErrorOrContainer
+fileForLibrary fp = do
+    mtime <- getModificationTime fp
+    probed <- probeFile fp
+    return $ trackFromFFprobe fp mtime probed
+
+calculateGroupingType :: FilePath -> LibraryTrack -> LibraryGroupingType
+calculateGroupingType fp lt =
+    fromMaybe (Filename fp) $ maybeArtistOrAlbumArtist lt
+
+maybeArtistOrAlbumArtist :: LibraryTrack -> Maybe LibraryGroupingType
+maybeArtistOrAlbumArtist lt =
+    (ltAlbumArtist lt >>= (Just . AlbumArtist)) <|>
+    (ltArtist lt >>= (Just . Artist))
 
 groupableTag :: ConfigurationLibraryGrouping -> Text -> Text
 groupableTag conf

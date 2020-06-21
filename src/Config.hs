@@ -1,6 +1,6 @@
 -- This source code is part of the resonator project, licensed under the
--- AGPL-3.0 license found in the LICENSE.md file in the root directory of this
--- source tree, or at https://www.gnu.org/licenses/agpl-3.0.html
+-- AGPL-3.0-or-later license found in the LICENSE.md file in the root directory
+-- of this source tree, or at https://www.gnu.org/licenses/agpl-3.0.html
 module Config
     ( findDefaultConfigFile
     , readConfigFromFile
@@ -17,11 +17,14 @@ import           TextUtils        ( showAsKebab, showAsKebabPair )
 import           TimeUtils        ( Milliseconds (..), weeks )
 
 import           Data.Coerce      ( Coercible )
-import           Data.Text        ( Text )
-import           Data.Text.Format
+import           Data.Maybe       ( maybe )
+import           Data.Text        ( Text, unpack )
+import           Data.Text.Format ( Only (..), format )
 import           Data.Text.Lazy   ( toStrict )
 import           System.Directory ( XdgDirectory (XdgConfig), getXdgDirectory )
 import           System.FilePath  ( (<.>), (</>) )
+import           Text.Casing      ( pascal )
+import           Text.Read        ( readMaybe )
 import           Toml             ( (.=) )
 import qualified Toml             as T
 import           Toml.Codec.Types ( Codec (..), TomlCodec, (<!>) )
@@ -43,34 +46,20 @@ withDefaultBool val key = withDefault val (T.bool key)
 withDefaultIntLike :: Coercible o Int => (t -> o) -> t -> T.Key -> Codec o o
 withDefaultIntLike cls val key = withDefault (cls val) (T.diwrap (T.int key))
 
-unknownBitrateExceededBehaviorError :: Format
-unknownBitrateExceededBehaviorError = "Unknown BitrateExceededBehavior: {}"
+unknownBEB :: Text -> Text
+unknownBEB str =
+    toStrict . format "unknown BitrateExceededBehavior: {}" $ Only str
 
--- Oh yeah, this is disgusting. Construct a list of the string representations,
--- kebab-cased, of all members of BitrateExceededBehavior that equal str. This
--- is expected to be of length 0 or 1 - in the 0 case, the user has requested a
--- unknown BitrateExceededBehavior; in the 1 case, return the matched enum
--- member.
---
--- This is all because I wanted to keep the config file kebab-case and not have
--- enum members magically flip to PascalCase - otherwise, there's already a
--- tomland codec for Bounded derivatives, and
--- `max-bitrate-exceeded-request-behavior = "LowerBitrateWithNotice"` would Just
--- Work.
---
--- Sigh.
+-- This is because I wanted to keep the config file kebab-case and not have enum
+-- members magically flip to PascalCase - otherwise, there's already a tomland
+-- codec for Bounded derivatives, and `max-bitrate-exceeded-request-behavior =
+-- "LowerBitrateWithNotice"` would Just Work.
 bebFromTomlString :: Text -> Either Text BitrateExceededBehavior
 bebFromTomlString str =
-    if null theBitrate
-        then Left $
-             toStrict $ format unknownBitrateExceededBehaviorError $ Only str
-        else Right (snd $ head theBitrate :: BitrateExceededBehavior)
-  where
-    theBitrate =
-        [ x
-        | x <- map showAsKebabPair [(minBound :: BitrateExceededBehavior) ..]
-        , fst x == str
-        ]
+    maybe
+        (Left $ unknownBEB str)
+        Right
+        (readMaybe $ (pascal . unpack) str :: Maybe BitrateExceededBehavior)
 
 data Configuration
     = Configuration

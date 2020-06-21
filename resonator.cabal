@@ -42,6 +42,7 @@ library
                        , string-conversions
                        , text
                        , text-format
+                       , time
                        , tomland
                        , typed-process
                        , unliftio
