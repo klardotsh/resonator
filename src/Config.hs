@@ -11,26 +11,29 @@ module Config
     , ConfigurationLibraryGrouping(..)
     ) where
 
-import           BitrateUtils     ( BitrateExceededBehavior (..), Kbps (..) )
-import           ProjectMeta      ( copyrightInfo, projectName )
-import           TextUtils        ( showAsKebab, showAsKebabPair )
-import           TimeUtils        ( Milliseconds (..), weeks )
+import           BitrateUtils           ( BitrateExceededBehavior (..),
+                                          Kbps (..) )
+import           ProjectMeta            ( projectName )
+import           TextUtils              ( showAsKebab )
+import           TimeUtils              ( Milliseconds (..), weeks )
 
-import           Data.Coerce      ( Coercible )
-import           Data.Maybe       ( maybe )
-import           Data.Text        ( Text, unpack )
-import           Data.Text.Format ( Only (..), format )
-import           Data.Text.Lazy   ( toStrict )
-import           System.Directory ( XdgDirectory (XdgConfig), getXdgDirectory )
-import           System.FilePath  ( (<.>), (</>) )
-import           Text.Casing      ( pascal )
-import           Text.Read        ( readMaybe )
-import           Toml             ( (.=) )
-import qualified Toml             as T
-import           Toml.Codec.Types ( Codec (..), TomlCodec, (<!>) )
+import           Control.Monad.IO.Class ( MonadIO )
+import           Data.Coerce            ( Coercible )
+import           Data.Text              ( Text, unpack )
+import           Data.Text.Format       ( Only (..), format )
+import           Data.Text.Lazy         ( toStrict )
+import           System.Directory       ( XdgDirectory (XdgConfig),
+                                          getXdgDirectory )
+import           System.FilePath        ( (<.>), (</>) )
+import           Text.Casing            ( pascal )
+import           Text.Read              ( readMaybe )
+import           Toml                   ( (.=) )
+import qualified Toml                   as T
+import           Toml.Codec.Types       ( Codec (..), TomlCodec, (<!>) )
 
-{- HLINT ignore readConfigFromFile -}
-readConfigFromFile path = T.decodeFileEither codec path
+readConfigFromFile ::
+       (MonadIO m) => FilePath -> m (Either [T.TomlDecodeError] Configuration)
+readConfigFromFile = T.decodeFileEither codec
 
 findDefaultConfigFile :: IO FilePath
 findDefaultConfigFile =

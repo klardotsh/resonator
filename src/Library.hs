@@ -3,9 +3,9 @@
 -- of this source tree, or at https://www.gnu.org/licenses/agpl-3.0.html
 module Library
     ( LibraryTrack(..)
-    , LibraryTrackError(..)
+    , LibraryTrackError
     , LibraryTrackContainer(..)
-    , LibraryTrackErrorOrContainer(..)
+    , LibraryTrackErrorOrContainer
     , fileForLibrary
     , groupableTag
     ) where
@@ -21,19 +21,14 @@ import           FFprobe                 ( FFprobeResult (..),
 import           TimeUtils               ( Milliseconds (..) )
 
 import           Control.Applicative     ( (<|>) )
-import           Data.ByteString.Lazy    ( ByteString )
-import           Data.List               ( nub )
 import           Data.Maybe              ( fromMaybe )
 import qualified Data.Set                as Set
-import           Data.String             ( IsString )
 import           Data.String.Conversions ( cs )
 import           Data.Text               ( Text )
 import qualified Data.Text               as T
-import           Data.Text.Format        ( Format, Only (..), format )
-import           Data.Text.Lazy          ( toStrict )
+import           Data.Text.Format        ( Only (..), format )
 import           Data.Time.Clock         ( UTCTime )
 import           System.Directory        ( getModificationTime )
-import           System.Process.Typed    ( readProcess, shell )
 import           Text.Casing             ( pascal )
 import           Text.Read               ( readMaybe )
 
@@ -102,10 +97,10 @@ maybeEitherFromMaybes l r = (l >>= (Just . Left)) <|> (r >>= (Just . Right))
 
 uniqueCodecOrError :: [Text] -> Either LibraryTrackError Codec
 uniqueCodecOrError codecs
-    | (null . nub) codecs =
+    | null codecs =
         Left
             "could not identify track's codec (no streams - is this an audio file?)"
-    | (length . nub) codecs > 1 = uniqueCodecOrError [head codecs]
+    | length codecs > 1 = uniqueCodecOrError [head codecs]
     | otherwise = do
         let codec = pascal . cs . head $ codecs
         maybe (Left . cs . format "unknown codec {}" $ Only codec) Right $
@@ -116,10 +111,10 @@ uniqueCodecOrError codecs
 durationOrError ::
        [FFprobeResultStream] -> Either LibraryTrackError Milliseconds
 durationOrError streams
-    | (null . nub) streams =
+    | null streams =
         Left
             "could not identify track's duration (no streams - is this an audio file?)"
-    | (length . nub) streams > 1 = durationOrError [head streams]
+    | length streams > 1 = durationOrError [head streams]
     | otherwise = do
         let stream = head streams
         Right $
@@ -185,9 +180,23 @@ groupableTag conf
         transformSpecialCharacters (ignoreSpecialCharacters conf) .
         transformCase (ignoreCase conf)
 
+conditionalTransform :: Bool -> (a -> a) -> a -> a
+conditionalTransform False _ x = x
+conditionalTransform True fn x = fn x
+
 transformArticles :: Bool -> Text -> Text
-transformArticles False t = t
-transformArticles True t  = T.unwords $ filter notArticle $ T.words t
+transformArticles enabled =
+    conditionalTransform enabled $ T.unwords . filter notArticle . T.words
+
+transformCase :: Bool -> Text -> Text
+transformCase enabled = conditionalTransform enabled T.toCaseFold
+
+transformSpaces :: Bool -> Text -> Text
+transformSpaces enabled = conditionalTransform enabled $ T.concat . T.words
+
+transformSpecialCharacters :: Bool -> Text -> Text
+transformSpecialCharacters enabled =
+    conditionalTransform enabled $ T.filter notSpecialCharacter
 
 -- entirely non-exhaustive and only handles English for now, because klardotsh
 -- is only (arguably) fluent in English and doesn't trust his fuzzy
@@ -201,18 +210,6 @@ articles = Set.fromList ["a", "an", "the"]
 -- method drops articles case-insensitively
 notArticle :: Text -> Bool
 notArticle word = Set.notMember (T.toCaseFold word) articles
-
-transformCase :: Bool -> Text -> Text
-transformCase False t = t
-transformCase True t  = T.toCaseFold t
-
-transformSpaces :: Bool -> Text -> Text
-transformSpaces False t = t
-transformSpaces True t  = T.concat $ T.words t
-
-transformSpecialCharacters :: Bool -> Text -> Text
-transformSpecialCharacters False t = t
-transformSpecialCharacters _ t     = T.filter notSpecialCharacter t
 
 -- by no means exhaustive, or probably even quite correct, but for Latin script
 -- languages, this should be a good start. as always, patches welcome.

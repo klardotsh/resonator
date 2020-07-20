@@ -19,6 +19,7 @@
 .hpc
 .hsenv*
 .stack-work/
+*.cabal
 cabal-dev
 cabal.project.local
 cabal.project.local~

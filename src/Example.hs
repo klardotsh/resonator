@@ -14,24 +14,19 @@ import           Filesystem         ( buildLibrary )
 import           Library            ( fileForLibrary )
 import           ProjectMeta        ( copyrightInfo )
 
-import           Control.Monad      ( foldM )
 import           Data.Aeson         ( Value (..), object, (.=) )
-import qualified Data.Aeson         as Json
-import           Data.Either        ( isLeft )
-import           Data.List          ( concatMap )
-import           Data.Text          ( Text )
-import qualified Data.Text.IO       as TIO
-import           Debug.Trace
 import           Paths_resonator    ( version )
 import           System.Environment ( lookupEnv )
 import           Text.Pretty.Simple ( pPrint )
+import qualified Toml               as T
 import           UnliftIO.Async     ( pooledMapConcurrentlyN )
 import qualified Web.Scotty         as S
 
+configParseError :: [T.TomlDecodeError] -> IO ()
 configParseError = pPrint
 
 serve :: Configuration -> S.ScottyM ()
-serve config = do
+serve _ = do
     S.get "/" $
         S.json $ object ["licenseNotice" .= copyrightInfo, "version" .= version]
     S.get "/some-json" $

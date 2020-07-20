@@ -4,11 +4,16 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DeriveGeneric  #-}
 
-module ProjectMeta where
+module ProjectMeta
+    ( CopyrightInfo(..)
+    , linkToProject
+    , projectName
+    , copyrightInfo
+    ) where
 
 import qualified Data.Aeson       as Json
 import           Data.Text        ( Text )
-import           Data.Text.Format
+import           Data.Text.Format ( Format, Only (..), format )
 import           Data.Text.Lazy   ( toStrict )
 import           GHC.Generics     ( Generic )
 
@@ -21,10 +26,13 @@ data CopyrightInfo
           }
     deriving (Generic, Show, Json.ToJSON)
 
-linkToProject = "https://git.klar.sh/klardotsh/{}" :: Format
+linkToProject :: Format
+linkToProject = "https://git.klar.sh/klardotsh/{}"
 
-projectName = "resonator" :: String
+projectName :: String
+projectName = "resonator"
 
+copyrightInfo :: CopyrightInfo
 copyrightInfo =
     CopyrightInfo
         { copyrightString = "(c) 2020 Josh Klar a.k.a. klardotsh"

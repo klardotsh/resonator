@@ -17,12 +17,9 @@ import qualified Data.Aeson.Types        as AT
 import           Data.ByteString.Lazy    ( ByteString )
 import           Data.String.Conversions ( cs )
 import           Data.Text               ( Text )
-import           Data.Text.Format        ( Format, Only (..), format )
 import           System.Directory        ( findExecutable )
 import           System.Exit             ( ExitCode (ExitFailure) )
-import           System.Process.Typed    ( ProcessConfig, proc, readProcess,
-                                           shell )
-import           Text.Pretty.Simple      ( pPrint )
+import           System.Process.Typed    ( ProcessConfig, proc, readProcess )
 
 data FFprobeResult
     = FFprobeResult
@@ -119,10 +116,6 @@ instance FromJSON FFprobeResultStream where
 parseFFprobeResponse :: ByteString -> Either String FFprobeResult
 parseFFprobeResponse response =
     eitherDecode response :: Either String FFprobeResult
-
-probeCommand :: Format
-probeCommand =
-    "ffprobe -v quiet -print_format json -show_format -show_streams '{}'"
 
 generateProc :: String -> String -> ProcessConfig () () ()
 generateProc ffprobe path =

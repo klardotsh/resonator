@@ -1,0 +1,99 @@
+---
+name: resonator
+version: '0.1.0'
+category: Web
+author: klardotsh <josh@klar.sh>
+maintainer: klardotsh <josh@klar.sh>
+copyright: 2020 Josh Klar
+license: AGPL-3
+license-file: LICENSE.md
+homepage: https://git.klar.sh/klardotsh/resonator#readme
+git: https://git.klar.sh/klardotsh/resonator
+
+extra-source-files:
+    - README.md
+
+ghc-options:
+    - -O2
+    - -Wall
+    - -Wcompat
+    - -Wincomplete-record-updates
+    - -Wincomplete-uni-patterns
+    - -Wredundant-constraints
+
+default-extensions:
+    - DerivingStrategies
+    - EmptyCase
+    - FlexibleContexts
+    - FlexibleInstances
+    - GeneralizedNewtypeDeriving
+    - LambdaCase
+    - MultiParamTypeClasses
+    - OverloadedStrings
+    - RecordWildCards
+    - ScopedTypeVariables
+    - StandaloneDeriving
+    - TypeApplications
+
+library:
+    source-dirs: src
+    exposed-modules:
+        - Example
+        - BitrateUtils
+        - CodecUtils
+        - Config
+        - FFprobe
+        - Filesystem
+        - Library
+        - ProjectMeta
+        - TextUtils
+        - TimeUtils
+    dependencies:
+        - base >=4.13 && <5
+        - aeson
+        - bytestring
+        - casing
+        - containers
+        - directory
+        - filemanip
+        - filepath
+        - magic
+        - mime
+        - pretty-simple
+        - raw-strings-qq
+        - scotty
+        - string-conversions
+        - text
+        - text-format
+        - time
+        - tomland
+        - typed-process
+        - unliftio
+        - wai
+
+executables:
+    resonator-exe:
+        main: Main.hs
+        source-dirs: app
+        dependencies:
+            - base
+            - resonator
+        ghc-options:
+            - -threaded
+            - -rtsopts
+            - -with-rtsopts=-N
+
+tests:
+    resonator-test:
+        main: Spec.hs
+        source-dirs: test
+        dependencies:
+            - base
+            - resonator
+            - hspec
+            - hspec-wai
+            - hspec-wai-json
+            - http-types
+            - tasty
+            - tasty-hunit
+            - aeson

@@ -6,33 +6,21 @@ module Filesystem
     , buildLibrary
     ) where
 
-import           BitrateUtils                ( Kbps (..) )
-import           CodecUtils                  ( LosslessCodec (..),
-                                               LossyCodec (..) )
-import           FFprobe
-import           TimeUtils                   ( Milliseconds (..) )
-
 import           Codec.MIME.Parse            ( parseMIMEType )
 import           Codec.MIME.Type             ( MIMEType (Audio),
                                                Type (mimeType) )
-import           Control.Applicative         ( (<|>) )
-import           Control.Monad               ( mapM )
-import           Data.List                   ( nub )
-import           Data.Maybe                  ( catMaybes, fromMaybe )
+import           Data.Maybe                  ( catMaybes )
 import           Data.Text                   ( Text, pack, unpack )
 import           Magic                       ( Magic, MagicFlag (MagicMime),
                                                magicFile, magicLoadDefault,
                                                magicOpen )
-import           System.FilePath.Find        ( FilterPredicate, always,
-                                               filePath, find )
+import           System.FilePath.Find        ( always, find )
 import           System.FilePath.GlobPattern ( GlobPattern )
-import           Text.Pretty.Simple          ( pPrint )
-import           Text.Read                   ( readMaybe )
 
 type FilePathWithMime = (FilePath, MIMEType)
 
 search :: GlobPattern -> FilePath -> IO [FilePath]
-search pat = find always (return True)
+search _ = find always (return True)
 
 isAudioMime :: (a, MIMEType) -> Bool
 isAudioMime (_, Audio _) = True
