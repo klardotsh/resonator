@@ -1,3 +1,12 @@
+> 15 July 2021: This idea started going somewhere, and then didn't. I'm not sure
+> if I'll get back to it, so for now, consider it a throwaway implementation of
+> how to parse `ffprobe` output and a TOML config file from Haskell 🤷‍♂️.
+> I'm not sure whether this still compiles, I haven't bothered to check
+> recently.
+>
+> This implementation has been relicensed from `AGPL-3.0-or-later` to `CC0-1.0`,
+> so go to town.
+
 # resonator
 
 resonator is a music streaming service for the modern, multi-device era. It aims
@@ -55,10 +64,30 @@ Matrix and someone should be able to help you get going.
 
 ## Legal
 
-This implementation of resonator belongs to the commons:
+`resonator`'s implementation, specification, documentation, artwork, and other
+assets are all [Copyfree](http://copyfree.org/), released under the [Creative
+Commons Zero 1.0
+dedication](https://creativecommons.org/publicdomain/zero/1.0/). Thus, while
+upstream contributions are welcomed and encouraged for the benefit of us all,
+you are free to use `resonator` for any purpose and in any context.
 
-- All code is released under the [AGPL 3.0 and later
-  versions](https://tldrlegal.com/license/gnu-affero-general-public-license-v3-(agpl-3.0))
-- All documentation (including the protocol definition), images, web assets, and
-  other media are released under [Creative Commons Attribution-ShareAlike
-  4.0](https://creativecommons.org/licenses/by-sa/4.0/)
+Contributions to `resonator`'s first-party repositories must be dedicated under
+the same terms. By submitting a contribution to a `resonator` project, you
+assert the following (this is the [Unlicense
+waiver](https://unlicense.org/WAIVER)):
+
+> I dedicate any and all copyright interest in this software to the
+> public domain. I make this dedication for the benefit of the public at
+> large and to the detriment of my heirs and successors. I intend this
+> dedication to be an overt act of relinquishment in perpetuity of all
+> present and future rights to this software under copyright law.
+>
+> To the best of my knowledge and belief, my contributions are either
+> originally authored by me or are derived from prior works which I have
+> verified are also in the public domain and are not subject to claims
+> of copyright by other parties.
+>
+> To the best of my knowledge and belief, no individual, business,
+> organization, government, or other entity has any copyright interest
+> in my contributions, and I affirm that I will not make contributions
+> that are otherwise encumbered.

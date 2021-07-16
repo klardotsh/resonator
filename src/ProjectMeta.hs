@@ -1,6 +1,6 @@
--- This source code is part of the resonator project, licensed under the
--- AGPL-3.0-or-later license found in the LICENSE.md file in the root directory
--- of this source tree, or at https://www.gnu.org/licenses/agpl-3.0.html
+-- This source code is part of the resonator project, licensed under the CC0-1.0
+-- license found in the COPYING file in the root directory of this source tree,
+-- or at https://creativecommons.org/publicdomain/zero/1.0/
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DeriveGeneric  #-}
 
@@ -36,7 +36,7 @@ copyrightInfo :: CopyrightInfo
 copyrightInfo =
     CopyrightInfo
         { copyrightString = "(c) 2020 Josh Klar a.k.a. klardotsh"
-        , license = "AGPL-3.0: https://www.gnu.org/licenses/agpl-3.0.html"
+        , license = "CC0-1.0: https://creativecommons.org/publicdomain/zero/1.0/"
         , projectUrl = toStrict $ format linkToProject $ Only projectName
         , sourceUrl = toStrict $ format linkToProject $ Only projectName
         }

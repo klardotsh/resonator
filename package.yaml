@@ -5,8 +5,8 @@ category: Web
 author: klardotsh <josh@klar.sh>
 maintainer: klardotsh <josh@klar.sh>
 copyright: 2020 Josh Klar
-license: AGPL-3
-license-file: LICENSE.md
+license: CC0-1.0
+license-file: COPYING
 homepage: https://git.klar.sh/klardotsh/resonator#readme
 git: https://git.klar.sh/klardotsh/resonator
 
@@ -38,7 +38,7 @@ default-extensions:
 library:
     source-dirs: src
     exposed-modules:
-        - Example
+        - ResonatorDaemon
         - BitrateUtils
         - CodecUtils
         - Config
